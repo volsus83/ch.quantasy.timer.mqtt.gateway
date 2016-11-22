@@ -45,7 +45,7 @@ package ch.quantasy.timer;
  *
  * @author reto
  */
-class DeviceTickerConfiguration implements Comparable<DeviceTickerConfiguration>{
+public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfiguration>{
     
     private String id;
     private Long first;
