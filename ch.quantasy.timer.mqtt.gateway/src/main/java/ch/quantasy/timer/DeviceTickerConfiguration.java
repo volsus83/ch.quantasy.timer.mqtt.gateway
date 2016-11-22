@@ -45,56 +45,99 @@ package ch.quantasy.timer;
  *
  * @author reto
  */
-public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfiguration>{
-    
+public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfiguration> {
+
     private String id;
     private Long first;
     private Long repeat;
     private Long last;
 
+    /**
+     *
+     * @return First absolute time in ms (epoc) when the ticker begins ticking
+     */
     public Long getFirst() {
         return first;
     }
 
+    /**
+     *
+     * @param first First absolute time in ms (epoc) when the ticker begins
+     * ticking. null means immediate start of ticking If first is smaller than
+     * @code{System.currentTimeInMillis()} ticking starts immediate If first is
+     * negative, the value will not be accepted (old value persists)
+     */
     public void setFirst(Long first) {
+        if (first < 0) {
+            return;
+        }
         this.first = first;
     }
-    
 
+    /**
+     *
+     * @return Id of the ticker to be configured.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     *
+     * @return
+     */
     public Long getLast() {
         return last;
     }
 
+    /**
+     *
+     * @param last absolute time in ms (epoc) when the ticker terminates. null
+     * means immediate termination after one ticking If last is smaller than
+     * {@code System.currentTimeInMillis()} ticking terminates immediate If last
+     * is negative, the value will not be accepted (old value persists)
+     */
     public void setLast(Long last) {
+        if (last < 0) {
+            return;
+        }
         this.last = last;
     }
-    
 
     public Long getRepeat() {
         return repeat;
     }
 
+    /**
+     *
+     * @param repeat delay in ms (epoc) between two ticks. null means no
+     * repetition If repeat is negative, the value will not be accepted (old
+     * value persists)
+     */
     public void setRepeat(Long repeat) {
+        if (repeat < 0) {
+            return;
+        }
         this.repeat = repeat;
     }
 
     private DeviceTickerConfiguration() {
     }
-    
 
+    /**
+     *
+     * @param id Identifier of the ticker to be configured
+     * @param first {@link #setFirst(java.lang.Long) }
+     * @param repeat {@link #setRepeat(java.lang.Long) }
+     * @param last  {@link #setLast(java.lang.Long) }
+     */
     public DeviceTickerConfiguration(String id, Long first, Long repeat, Long last) {
         this.id = id;
         this.first = first;
         this.repeat = repeat;
         this.last = last;
     }
-    
-    
-    
+
     @Override
     public int compareTo(DeviceTickerConfiguration o) {
         return id.compareTo(o.id);
@@ -104,7 +147,5 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
     public String toString() {
         return "DeviceTickerConfiguration{" + "id=" + id + ", first=" + first + ", repeat=" + repeat + ", last=" + last + '}';
     }
-    
-    
-    
+
 }

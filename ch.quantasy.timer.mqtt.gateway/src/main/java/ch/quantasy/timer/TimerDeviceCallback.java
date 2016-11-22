@@ -47,10 +47,22 @@ package ch.quantasy.timer;
  */
 public interface TimerDeviceCallback {
 
+    /**
+     *
+     * @param configuration
+     */
     public void tickerConfigurationUpdated(DeviceTickerConfiguration configuration);
     
+    /**
+     *
+     * @param id
+     */
     public void onTick(String id);
 
+    /**
+     *
+     * @param configuration
+     */
     public void tickerConfigurationRemoved(DeviceTickerConfiguration configuration);
 
 }
