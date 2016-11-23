@@ -69,30 +69,32 @@ public class TimerDevice {
             ticker = new Ticker();
             tickerMap.put(configuration.getId(), ticker);
         }
-        if (ticker.updateConfiguration(configuration)) {
-            callback.tickerConfigurationUpdated(configuration);
-        }
+        ticker.updateConfiguration(configuration);
     }
 
     public SortedMap<String, Ticker> getTickerMap() {
         return new TreeMap(tickerMap);
     }
 
-    
     class Ticker {
 
         private DeviceTickerConfiguration configuration;
         private Task timerTask;
 
-        public boolean updateConfiguration(DeviceTickerConfiguration configuration) {
+        public void updateConfiguration(DeviceTickerConfiguration configuration) {
             if (this.configuration == null) {
+                if (configuration.getLast() != null && (configuration.getLast() < System.currentTimeMillis())) {
+                    return;
+                }
                 this.configuration = configuration;
+                callback.tickerConfigurationUpdated(this.configuration);
+
                 this.timerTask = new Task();
                 this.timerTask.updateTimer();
-                return true;
+
             } else {
                 if (!this.configuration.getId().equals(configuration.getId())) {
-                    return false;
+                    return;
                 }
                 boolean changed = false;
                 if (configuration.getFirst() != null && (!configuration.getFirst().equals(this.configuration.getFirst())) && configuration.getFirst() > System.currentTimeMillis()) {
@@ -107,12 +109,20 @@ public class TimerDevice {
                     timerTask.updateTimer();
                 }
 
-                if (configuration.getLast() != null && (!configuration.getLast().equals(this.configuration.getLast())) && configuration.getLast() > System.currentTimeMillis()) {
+                if (configuration.getLast() != null && (!configuration.getLast().equals(this.configuration.getLast()))) {
                     this.configuration.setLast(configuration.getLast());
-                    changed = true;
+                    callback.tickerConfigurationUpdated(this.configuration);
+                    if (this.configuration.getLast() < System.currentTimeMillis()) {
+                        timerTask.cancel();
+                        tickerMap.remove(configuration.getId());
+                        callback.tickerConfigurationRemoved(this.configuration);
+                        return;
+                    }
                 }
+                if (changed) {
+                    callback.tickerConfigurationUpdated(this.configuration);
 
-                return changed;
+                }
             }
 
         }
@@ -145,10 +155,12 @@ public class TimerDevice {
                 if (configuration.getFirst() != null) {
                     start = (Math.max(start, configuration.getFirst() - System.currentTimeMillis()));
                 }
-                if (configuration.getRepeat() == null) {
+                if (configuration.getRepeat() == null||configuration.getRepeat()==0) {
                     if (configuration.getLast() == null) {
                         //so it is a one timer right now
                         timer.schedule(timerTask, start);
+                        tickerMap.remove(configuration.getId());
+                        callback.tickerConfigurationRemoved(configuration);
                     } else {
                         //one to start and one to end.
                         timer.scheduleAtFixedRate(timerTask, start, configuration.getLast() - System.currentTimeMillis());
