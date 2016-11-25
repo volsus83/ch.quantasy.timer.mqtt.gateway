@@ -66,6 +66,7 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
         addDescription(getContract().INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
         addDescription(getContract().STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
         addDescription(getContract().EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: true\n");
+        addDescription(getContract().STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
 
         configurations = new TreeSet<>();
         device = new TimerDevice(this);
@@ -78,25 +79,45 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
             }
         });
         super.connect();
+        device.setTimerConfiguration(new DeviceTickerConfiguration(super.getParameters().getClientID(), null, 1000L, null));
     }
 
     private SortedSet<DeviceTickerConfiguration> configurations;
 
     @Override
     public void tickerConfigurationUpdated(DeviceTickerConfiguration configuration) {
+        if (configuration.getId().equals(super.getParameters().getClientID())) {
+            return;
+        }
         configurations.add(configuration);
         addStatus(getContract().STATUS_CONFIGURATION + "/" + configuration.getId(), configuration);
     }
 
     @Override
     public void onTick(String id) {
-        addEvent(getContract().EVENT_TICK + "/" + id, true);
+        if (id.equals(super.getParameters().getClientID())) {
+            addStatus(getContract().STATUS_UNIX_EPOCH, new UnixEpochStatus());
+        } else {
+            addEvent(getContract().EVENT_TICK + "/" + id, true);
+        }
     }
 
     @Override
     public void tickerConfigurationRemoved(DeviceTickerConfiguration configuration) {
         configurations.remove(configuration);
         addStatus(getContract().STATUS_CONFIGURATION + "/" + configuration.getId(), null);
+    }
+    
+    final class UnixEpochStatus{
+        private long millisceconds;
+        public UnixEpochStatus(){
+            millisceconds=System.currentTimeMillis();
+        }
+
+        public long getMillisceconds() {
+            return millisceconds;
+        }
+        
     }
 
 }

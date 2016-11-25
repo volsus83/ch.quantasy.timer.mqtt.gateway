@@ -55,6 +55,8 @@ public class TimerServiceContract extends ClientContract {
     public final String STATUS_CONFIGURATION;
     private final String TICK;
     public final String EVENT_TICK;
+    private final String UNIX_EPOCH;
+    public final String STATUS_UNIX_EPOCH;
     public TimerServiceContract(String instanceID) {
         super("Timer", "Tick", instanceID);
         CONFIGURATION="configuration";
@@ -62,6 +64,8 @@ public class TimerServiceContract extends ClientContract {
         STATUS_CONFIGURATION=STATUS+"/"+CONFIGURATION;
         TICK="tick";
         EVENT_TICK=EVENT+"/"+TICK;
+        UNIX_EPOCH="unixEpoch";
+        STATUS_UNIX_EPOCH=STATUS+"/"+UNIX_EPOCH;
     }
 
 }

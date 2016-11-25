@@ -75,6 +75,7 @@ public class TimerDevice {
     public SortedMap<String, Ticker> getTickerMap() {
         return new TreeMap(tickerMap);
     }
+    
 
     class Ticker {
 
