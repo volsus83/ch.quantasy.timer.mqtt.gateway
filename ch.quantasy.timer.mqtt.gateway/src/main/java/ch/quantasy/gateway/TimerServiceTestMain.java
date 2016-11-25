@@ -39,48 +39,39 @@
  *
  *
  */
-package ch.quantasy.timer;
+package ch.quantasy.gateway;
 
+import static ch.quantasy.gateway.TimerMqWay.computerName;
+import ch.quantasy.gateway.service.timer.TimerService;
+import ch.quantasy.gateway.service.timer.TimerServiceContract;
+import ch.quantasy.mqtt.gateway.client.ClientContract;
+import ch.quantasy.mqtt.gateway.client.GatewayClient;
+import ch.quantasy.timer.DeviceTickerConfiguration;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
+import java.net.URI;
+import org.eclipse.paho.client.mqttv3.MqttException;
 
 /**
  *
  * @author reto
  */
-public class TimerMain implements TimerDeviceCallback {
+public class TimerServiceTestMain {
+    
+    public static void main(String[] args) throws MqttException, InterruptedException, JsonProcessingException, IOException {
+        URI mqttURI = URI.create("tcp://127.0.0.1:1883");
+        if (args.length > 0) {
+            mqttURI = URI.create(args[0]);
+        } else {
+            System.out.printf("Per default, 'tcp://127.0.0.1:1883' is chosen.\nYou can provide another address as first argument i.e.: tcp://iot.eclipse.org:1883\n");
+        }
+        System.out.printf("\n%s will be used as broker address.\n", mqttURI);
 
-    public TimerMain() throws InterruptedException {
-        TimerDevice td = new TimerDevice(this);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("yyy", System.currentTimeMillis(), 2000L, System.currentTimeMillis() + (10 * 1000)));
-
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis(), 1000L, System.currentTimeMillis() + (10 * 1000)));
-        Thread.sleep(5000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 100L, null));
-        Thread.sleep(2000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis() + (5 * 1000), 500L, System.currentTimeMillis() + (10 * 1000)));
-        Thread.sleep(8000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, null, System.currentTimeMillis() + (10 * 1000)));
-
-    }
-
-    public static void main(String[] args) throws IOException, InterruptedException {
-        new TimerMain();
+        TimerServiceContract timerContract=new TimerServiceContract("prisma");
+        GatewayClient gc = new GatewayClient(mqttURI,"tester"+((int)(10000*Math.random())),new ClientContract("TimerTester", "prisma","1"));
+        gc.connect();
+        gc.addIntent(timerContract.INTENT_CONFIGURATION, new DeviceTickerConfiguration("123abc", System.currentTimeMillis(), 2000L, null));
         System.in.read();
     }
-
-    @Override
-    public void tickerConfigurationUpdated(DeviceTickerConfiguration configuration) {
-        System.out.println("Config: " + configuration);
-    }
-
-    @Override
-    public void onTick(String id) {
-        System.out.printf("%d ID: %s% d%n", count++, id, System.currentTimeMillis());
-    }
-    private int count;
-
-    @Override
-    public void tickerConfigurationRemoved(DeviceTickerConfiguration configuration) {
-        System.out.println("Config removed: " + configuration);
-    }
+    
 }
