@@ -70,7 +70,7 @@ public class TimerServiceTestMain {
         TimerServiceContract timerContract=new TimerServiceContract("prisma");
         GatewayClient gc = new GatewayClient(mqttURI,"tester"+((int)(10000*Math.random())),new ClientContract("TimerTester", "prisma","1"));
         gc.connect();
-        gc.addIntent(timerContract.INTENT_CONFIGURATION, new DeviceTickerConfiguration("123abc", System.currentTimeMillis(), 2000L, null));
+        gc.addIntent(timerContract.INTENT_CONFIGURATION, new DeviceTickerConfiguration("123abc", System.currentTimeMillis(), 0,2000, null));
         System.in.read();
     }
     

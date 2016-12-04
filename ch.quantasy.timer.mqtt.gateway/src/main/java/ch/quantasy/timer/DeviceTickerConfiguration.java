@@ -48,29 +48,48 @@ package ch.quantasy.timer;
 public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfiguration> {
 
     private String id;
-    private Long first;
-    private Long repeat;
-    private Long last;
+    private Long epoch;
+    private Integer first;
+    private Integer interval;
+    private Integer last;
 
     /**
      *
-     * @return First absolute time in ms (epoc) when the ticker begins ticking
+     * @return First time in ms relative to {@link #getEpoch()} when the ticker
+     * begins ticking
      */
-    public Long getFirst() {
+    public Integer getFirst() {
         return first;
     }
 
     /**
      *
-     * @param first First absolute time in ms (epoc) when the ticker begins
-     * ticking. null means immediate start of ticking If first is smaller than
-     * @code{System.currentTimeInMillis()} ticking starts immediate If first is
-     * negative, the value will not be accepted (old value persists)
+     * @param epoch Starting point in time. The value represents ms
+     * since Unix epoc. null is considered as 'now'. Negative values are
+     * ignored (Old value persists).
      */
-    public void setFirst(Long first) {
-        if (first < 0) {
+    public void setEpoch(Long epoch) {
+        if (epoch < 0) {
             return;
         }
+        this.epoch = epoch;
+    }
+
+    /**
+     * 
+     * @return Epoch of this Ticker
+     */
+    public Long getEpoch() {
+        return epoch;
+    }
+    
+
+    /**
+     *
+     * @param first First time in ms relative to {@link #setEpoch(java.lang.Long)}
+     * when the ticker begins ticking. null is considered to be 0.
+     */
+    public void setFirst(Integer first) {
         this.first = first;
     }
 
@@ -86,39 +105,34 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
      *
      * @return
      */
-    public Long getLast() {
+    public Integer getLast() {
         return last;
     }
 
     /**
      *
-     * @param last absolute time in ms (epoc) when the ticker terminates. null
-     * means immediate termination after one ticking If last is smaller than
-     * {@code System.currentTimeInMillis()} ticking terminates immediate If last
-     * is negative, the value will not be accepted (old value persists)
+     * @param last Time in ms relative to {@link #setEpoch(java.lang.Long)}
+     * when the ticker terminates. null is considered to be 0.
      */
-    public void setLast(Long last) {
-        if (last < 0) {
-            return;
-        }
+    public void setLast(Integer last) {
         this.last = last;
     }
 
-    public Long getRepeat() {
-        return repeat;
+    public Integer getInterval() {
+        return interval;
     }
 
     /**
      *
-     * @param repeat delay in ms (epoc) between two ticks. null means no
-     * repetition If repeat is negative, the value will not be accepted (old
-     * value persists)
+     * @param interval Interval in ms between two ticks. null is considered as 
+     * no repetition.
+     * Negative values are ignored (old value persists).
      */
-    public void setRepeat(Long repeat) {
-        if (repeat < 0) {
+    public void setInterval(Integer interval) {
+        if (interval < 0) {
             return;
         }
-        this.repeat = repeat;
+        this.interval = interval;
     }
 
     private DeviceTickerConfiguration() {
@@ -127,14 +141,16 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
     /**
      *
      * @param id Identifier of the ticker to be configured
+     * @param epoch {@link #setEpoch(java.lang.Long) }
      * @param first {@link #setFirst(java.lang.Long) }
-     * @param repeat {@link #setRepeat(java.lang.Long) }
-     * @param last  {@link #setLast(java.lang.Long) }
+     * @param interval {@link #setInterval(java.lang.Long) }
+     * @param last {@link #setLast(java.lang.Long) }
      */
-    public DeviceTickerConfiguration(String id, Long first, Long repeat, Long last) {
+    public DeviceTickerConfiguration(String id, Long epoch, Integer first, Integer interval, Integer last) {
         this.id = id;
+        this.epoch = epoch;
         this.first = first;
-        this.repeat = repeat;
+        this.interval = interval;
         this.last = last;
     }
 
@@ -145,7 +161,8 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
 
     @Override
     public String toString() {
-        return "DeviceTickerConfiguration{" + "id=" + id + ", first=" + first + ", repeat=" + repeat + ", last=" + last + '}';
+        return "DeviceTickerConfiguration{" + "id=" + id + ", epoch=" + epoch + ", first=" + first + ", interval=" + interval + ", last=" + last + '}';
     }
 
+    
 }

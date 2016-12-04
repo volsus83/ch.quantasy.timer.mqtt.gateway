@@ -51,15 +51,17 @@ public class TimerDeviceTestMain implements TimerDeviceCallback {
 
     public TimerDeviceTestMain() throws InterruptedException {
         TimerDevice td = new TimerDevice(this);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("yyy", System.currentTimeMillis(), 2000L, System.currentTimeMillis() + (10 * 1000)));
+        td.setTimerConfiguration(new DeviceTickerConfiguration("yyy", System.currentTimeMillis() ,0,2000, 10 * 1000));
 
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis(), 1000L, System.currentTimeMillis() + (10 * 1000)));
+        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis(),0, 1000, 10 * 1000));
         Thread.sleep(5000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 100L, null));
+        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 100, null,null));
         Thread.sleep(2000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis() + (5 * 1000), 500L, System.currentTimeMillis() + (10 * 1000)));
+        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 5 * 1000, 500, 10 * 1000));
         Thread.sleep(8000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, null, System.currentTimeMillis() + (10 * 1000)));
+        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, null, null, 10 * 1000));
+        Thread.sleep(8000);
+        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null,null, null, 10 * 1000));
 
     }
 
@@ -74,8 +76,8 @@ public class TimerDeviceTestMain implements TimerDeviceCallback {
     }
 
     @Override
-    public void onTick(String id) {
-        System.out.printf("%d ID: %s% d%n", count++, id, System.currentTimeMillis());
+    public void onTick(String id, Long deltaEpoch) {
+        System.out.printf("%d ID: %s% d%n", count++, id, deltaEpoch);
     }
     private int count;
 

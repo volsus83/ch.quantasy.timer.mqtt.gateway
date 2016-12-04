@@ -65,7 +65,7 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
         super(mqttURI, instance + "TimerService.q334oi34-q34", new TimerServiceContract(instance));
         addDescription(getContract().INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
         addDescription(getContract().STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        addDescription(getContract().EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: true\n");
+        addDescription(getContract().EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: [0.." + Long.MAX_VALUE + "]\n");
         addDescription(getContract().STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
 
         configurations = new TreeSet<>();
@@ -79,7 +79,7 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
             }
         });
         super.connect();
-        device.setTimerConfiguration(new DeviceTickerConfiguration(super.getParameters().getClientID(), null, 1000L, null));
+        device.setTimerConfiguration(new DeviceTickerConfiguration(super.getParameters().getClientID(), null, null, 1000, null));
     }
 
     private SortedSet<DeviceTickerConfiguration> configurations;
@@ -94,11 +94,11 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
     }
 
     @Override
-    public void onTick(String id) {
+    public void onTick(String id,Long epochDelta) {
         if (id.equals(super.getParameters().getClientID())) {
             addStatus(getContract().STATUS_UNIX_EPOCH, new UnixEpochStatus());
         } else {
-            addEvent(getContract().EVENT_TICK + "/" + id, true);
+            addEvent(getContract().EVENT_TICK + "/" + id, epochDelta);
         }
     }
 

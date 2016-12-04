@@ -57,7 +57,7 @@ public interface TimerDeviceCallback {
      *
      * @param id
      */
-    public void onTick(String id);
+    public void onTick(String id,Long deltaEpoch);
 
     /**
      *
