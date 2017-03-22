@@ -41,8 +41,6 @@
  */
 package ch.quantasy.gateway;
 
-import static ch.quantasy.gateway.TimerMqWay.computerName;
-import ch.quantasy.gateway.service.timer.TimerService;
 import ch.quantasy.gateway.service.timer.TimerServiceContract;
 import ch.quantasy.mqtt.gateway.client.ClientContract;
 import ch.quantasy.mqtt.gateway.client.GatewayClient;

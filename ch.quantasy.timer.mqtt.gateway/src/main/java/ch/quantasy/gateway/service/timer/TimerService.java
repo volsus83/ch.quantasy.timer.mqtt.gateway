@@ -46,7 +46,6 @@ import ch.quantasy.timer.DeviceTickerConfiguration;
 import ch.quantasy.timer.TimerDevice;
 import ch.quantasy.timer.TimerDeviceCallback;
 import java.net.URI;
-import java.net.UnknownHostException;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -62,9 +61,9 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
     private final TimerDevice device;
 
     public TimerService(URI mqttURI, String instance) throws MqttException {
-        super(mqttURI, instance + "TimerService.q334oi34-q34", new TimerServiceContract(instance));
-        publishDescription(getContract().INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        publishDescription(getContract().STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n repeat: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
+        super(mqttURI, instance, new TimerServiceContract(instance));
+        publishDescription(getContract().INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
+        publishDescription(getContract().STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
         publishDescription(getContract().EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: [0.." + Long.MAX_VALUE + "]\n");
         publishDescription(getContract().STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
 
@@ -73,13 +72,13 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
         subscribe(getContract().INTENT_CONFIGURATION + "/#", (topic, payload) -> {
             try {
                 DeviceTickerConfiguration configuration = super.getMapper().readValue(payload, DeviceTickerConfiguration.class);
-                device.setTimerConfiguration(configuration);
+                device.setTickerConfiguration(configuration);
             } catch (Exception ex) {
                 Logger.getLogger(TimerService.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         super.connect();
-        device.setTimerConfiguration(new DeviceTickerConfiguration(super.getParameters().getClientID(), null, null, 1000, null));
+        device.setTickerConfiguration(new DeviceTickerConfiguration(super.getParameters().getClientID(), null, null, 1000, null));
     }
 
     private SortedSet<DeviceTickerConfiguration> configurations;
@@ -94,7 +93,7 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
     }
 
     @Override
-    public void onTick(String id,Long epochDelta) {
+    public void onTick(String id, Long epochDelta) {
         if (id.equals(super.getParameters().getClientID())) {
             publishStatus(getContract().STATUS_UNIX_EPOCH, new UnixEpochStatus());
         } else {
@@ -107,17 +106,19 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
         configurations.remove(configuration);
         publishStatus(getContract().STATUS_CONFIGURATION + "/" + configuration.getId(), null);
     }
-    
-    final class UnixEpochStatus{
+
+    final class UnixEpochStatus {
+
         private long millisceconds;
-        public UnixEpochStatus(){
-            millisceconds=System.currentTimeMillis();
+
+        public UnixEpochStatus() {
+            millisceconds = System.currentTimeMillis();
         }
 
         public long getMillisceconds() {
             return millisceconds;
         }
-        
+
     }
 
 }

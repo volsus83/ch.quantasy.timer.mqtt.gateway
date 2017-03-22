@@ -63,146 +63,122 @@ public class TimerDevice {
 
     }
 
-    public void setTimerConfiguration(DeviceTickerConfiguration configuration) {
-        Ticker ticker = tickerMap.get(configuration.getId());
-        if (ticker == null) {
-            try {
-                ticker = new Ticker(configuration);
+    public void setTickerConfiguration(DeviceTickerConfiguration configuration) {
+        Ticker ticker = null;
+        synchronized (this) {
+            ticker = tickerMap.get(configuration.getId());
+            if (ticker == null) {
+                ticker = new Ticker(configuration.getId());
                 tickerMap.put(configuration.getId(), ticker);
-            } catch (IllegalArgumentException ex) {
-                //Nope. That was something in the past...
             }
-        } else {
-            ticker.updateConfiguration(configuration);
         }
+        ticker.updateConfig(configuration);
+
     }
 
     public SortedMap<String, Ticker> getTickerMap() {
         return new TreeMap(tickerMap);
     }
 
+    public synchronized void removeTicker(Ticker ticker) {
+        tickerMap.remove(ticker.id);
+        callback.tickerConfigurationRemoved(ticker.configuration);
+    }
+
     class Ticker {
 
         private DeviceTickerConfiguration configuration;
-        private Task timerTask;
+        private String id;
+        private Task task;
 
-        public Ticker(DeviceTickerConfiguration configuration) throws IllegalArgumentException {
-            if (configuration.getEpoch() == null) {
-                configuration.setEpoch(System.currentTimeMillis());
-            }
-            this.configuration = configuration;
-
-            if (isLastReached()) {
-                throw new IllegalArgumentException("Timer set to finish in the past.");
-            }
-
-            updateConfiguration();
+        public Ticker(String id) {
+            this.id = id;
         }
 
-        public boolean isLastReached() {
-            if (configuration.getLast() == null) {
-                return false;
-            }
-            return getEpochDelta() >= configuration.getLast();
-        }
-
-        public boolean isFirstReached() {
-            if (configuration.getFirst() == null) {
-                return true;
-            }
-            return getEpochDelta() >= configuration.getFirst();
-        }
-
-        private void updateConfiguration() {
-            callback.tickerConfigurationUpdated(this.configuration);
-            this.timerTask = new Task();
-            this.timerTask.updateTimer();
-        }
-
-        public long getEpochDelta() {
-            return System.currentTimeMillis() - configuration.getEpoch();
-        }
-
-        public void updateConfiguration(DeviceTickerConfiguration configuration) {
-            if (!this.configuration.getId().equals(configuration.getId())) {
+        public void updateConfig(DeviceTickerConfiguration configuration) {
+            if (!this.id.equals(configuration.getId())) {
                 return;
             }
-            boolean changed = false;
-            if (configuration.getFirst() != null && (!configuration.getFirst().equals(this.configuration.getFirst()))) {
-                this.configuration.setFirst(configuration.getFirst());
-                if (!isFirstReached()) {
-                    timerTask.cancel();
+            if (this.configuration == null) {
+                this.configuration = new DeviceTickerConfiguration(configuration);
+                if (this.configuration.getEpoch() == null) {
+                    this.configuration.setEpoch(System.currentTimeMillis());
                 }
-                changed = true;
-            }
-            if (configuration.getInterval() != null && (!configuration.getInterval().equals(this.configuration.getInterval()))) {
-                this.configuration.setInterval(configuration.getInterval());
-                changed = true;
-            }
-            if (changed) {
-                timerTask.updateTimer();
-            }
-
-            if (configuration.getLast() != null && (!configuration.getLast().equals(this.configuration.getLast()))) {
-                this.configuration.setLast(configuration.getLast());
-                callback.tickerConfigurationUpdated(this.configuration);
-                if (isLastReached()) {
-                    timerTask.cancel();
-                    tickerMap.remove(configuration.getId());
-                    callback.tickerConfigurationRemoved(this.configuration);
-                    return;
+                if (this.configuration.getFirst() == null) {
+                    this.configuration.setFirst(0);
                 }
-                changed = true;
+            } else if (this.configuration.equals(configuration)) {
+                return;
+            } else {
+                if (configuration.getEpoch() != null) {
+                    this.configuration.setEpoch(configuration.getEpoch());
+                }
+                if (configuration.getFirst() != null) {
+                    this.configuration.setFirst(configuration.getFirst());
+                }
+                if (configuration.getLast() != null) {
+                    this.configuration.setLast(configuration.getLast());
+                }
+                if (configuration.getInterval() != null) {
+                    this.configuration.setInterval(configuration.getInterval());
+                }
             }
-            if (changed) {
-                callback.tickerConfigurationUpdated(this.configuration);
-            }
+            task = new Task(task);
         }
 
         class Task extends TimerTask {
 
-            public Task() {
+            private boolean isFirstReached = false;
+            private long latestTick = 0;
+
+            public Task(Task oldTask) {
+                if (oldTask != null) {
+                    oldTask.cancel();
+                    this.latestTick = oldTask.latestTick;
+                }
+                System.out.println("Config: " + configuration);
+                callback.tickerConfigurationUpdated(configuration);
+                Integer interval = configuration.getInterval();
+                Long start = configuration.getFirstInMillisFromNow();
+                if (start == null || start <= 0) {
+                    if (interval != null && interval > 0) {
+                        start = Math.max(0, interval - (System.currentTimeMillis() - latestTick));
+                        isFirstReached = configuration.isFirstReached();
+                        timer.scheduleAtFixedRate(this, start, interval);
+                    } else {
+                        isFirstReached = configuration.isFirstReached();
+                        timer.schedule(this, 0);
+                    }
+                } else {
+
+                    if (interval != null && interval > 0) {
+                        isFirstReached = configuration.isFirstReached();
+                        timer.scheduleAtFixedRate(this, start, interval);
+                    } else {
+                        isFirstReached = configuration.isFirstReached();
+                        timer.schedule(this, start);
+                    }
+                }
             }
 
             @Override
             public void run() {
-
-                if (!isFirstReached()) {
+                if (isFirstReached == false) {
+                    isFirstReached = true;
+                    callback.tickerConfigurationUpdated(configuration);
+                }
+                latestTick = System.currentTimeMillis();
+                callback.onTick(configuration.getId(), 0 - configuration.getEpochDelta());
+                // System.out.println(System.currentTimeMillis()+":"+configuration);
+                if (configuration.isFinished()) {
                     this.cancel();
-                    updateTimer();
-                    return;
-                }
-                if (isLastReached()) {
-                    this.cancel();
-                    tickerMap.remove(configuration.getId());
-                    callback.tickerConfigurationRemoved(configuration);
-                }
-                callback.onTick(configuration.getId(), getEpochDelta());
-            }
-
-            public final void updateTimer() {
-                timerTask.cancel();
-                timerTask = new Task();
-                long start = 0;
-                if (configuration.getFirst() != null) {
-                    start = (Math.max(start, getEpochDelta() + configuration.getFirst()));
-                }
-                if (configuration.getInterval() == null || configuration.getInterval() == 0) {
-                    if (configuration.getLast() == null) {
-                        //so it is a one timer right now
-                        timer.schedule(timerTask, start);
-                        tickerMap.remove(configuration.getId());
-                        callback.tickerConfigurationRemoved(configuration);
-                    } else {
-                        //one to start and one to end.
-                        timer.scheduleAtFixedRate(timerTask, start, Math.max(0,getEpochDelta() + configuration.getLast() - start));
-                    }
-                } else {
-                    timer.scheduleAtFixedRate(timerTask, start, configuration.getInterval());
+                    callback.tickerConfigurationUpdated(configuration);
+                    removeTicker(Ticker.this);
                 }
             }
 
         }
 
     }
+
 }

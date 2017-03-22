@@ -51,17 +51,17 @@ public class TimerDeviceTestMain implements TimerDeviceCallback {
 
     public TimerDeviceTestMain() throws InterruptedException {
         TimerDevice td = new TimerDevice(this);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("yyy", System.currentTimeMillis() ,0,2000, 10 * 1000));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("yyy", System.currentTimeMillis() ,0,2000, 10 * 1000));
 
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis(),0, 1000, 10 * 1000));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("xxx", System.currentTimeMillis(),0, 1000, 10 * 1000));
         Thread.sleep(5000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 100, null,null));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("xxx", null, 100, null,null));
         Thread.sleep(2000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, 5 * 1000, 500, 10 * 1000));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("xxx", null, 5 * 1000, 500, 10 * 1000));
         Thread.sleep(8000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null, null, null, 10 * 1000));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("xxx", null, null, null, 10 * 1000));
         Thread.sleep(8000);
-        td.setTimerConfiguration(new DeviceTickerConfiguration("xxx", null,null, null, 10 * 1000));
+        td.setTickerConfiguration(new DeviceTickerConfiguration("xxx", null,null, null, 10 * 1000));
 
     }
 

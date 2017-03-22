@@ -64,9 +64,11 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
 
     /**
      *
-     * @param epoch Starting point in time. The value represents ms
-     * since Unix epoc. null is considered as 'now'. Negative values are
-     * ignored (Old value persists).
+     * @param epoch Reference time. The value represents ms since Unix epoc.
+     * null is considered as 'now'. Negative values are ignored (Old value
+     * persists). This is used to indicate which time-reference is used. If the
+     * client wants to start 20 seconds from Unix epoch-'client-now' it
+     * indicates this by sending its current time.
      */
     public void setEpoch(Long epoch) {
         if (epoch < 0) {
@@ -76,20 +78,22 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
     }
 
     /**
-     * 
+     *
      * @return Epoch of this Ticker
      */
     public Long getEpoch() {
         return epoch;
     }
-    
 
     /**
      *
-     * @param first First time in ms relative to {@link #setEpoch(java.lang.Long)}
-     * when the ticker begins ticking. null is considered to be 0.
+     * @param first First time in ms relative to
+     * {@link #setEpoch(java.lang.Long)} when the ticker begins ticking.
      */
     public void setFirst(Integer first) {
+        if (first < 0) {
+            return;
+        }
         this.first = first;
     }
 
@@ -111,10 +115,13 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
 
     /**
      *
-     * @param last Time in ms relative to {@link #setEpoch(java.lang.Long)}
-     * when the ticker terminates. null is considered to be 0.
+     * @param last Time in ms relative to {@link #setEpoch(java.lang.Long)} when
+     * the ticker terminates.
      */
     public void setLast(Integer last) {
+        if (last < 0) {
+            return;
+        }
         this.last = last;
     }
 
@@ -124,9 +131,8 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
 
     /**
      *
-     * @param interval Interval in ms between two ticks. null is considered as 
-     * no repetition.
-     * Negative values are ignored (old value persists).
+     * @param interval Interval in ms between two ticks. null is considered as
+     * no repetition. Negative values are ignored (old value persists).
      */
     public void setInterval(Integer interval) {
         if (interval < 0) {
@@ -154,6 +160,10 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
         this.last = last;
     }
 
+    public DeviceTickerConfiguration(DeviceTickerConfiguration configuration) {
+        this(configuration.id, configuration.epoch, configuration.first, configuration.interval, configuration.last);
+    }
+
     @Override
     public int compareTo(DeviceTickerConfiguration o) {
         return id.compareTo(o.id);
@@ -164,5 +174,38 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
         return "DeviceTickerConfiguration{" + "id=" + id + ", epoch=" + epoch + ", first=" + first + ", interval=" + interval + ", last=" + last + '}';
     }
 
+    public boolean isFinished() {
+        if (getLast() == null) {
+            if (getInterval() == null || getInterval() < 1) {
+                return true;
+            }
+            return false;
+        }
+        return getLastInMillisFromNow()<=0;
+    }
     
+    public Long getLastInMillisFromNow(){
+        if(getLast()==null) return null;
+        return getEpochDelta() + getLast();
+    }
+
+    public Long getFirstInMillisFromNow() {
+        if(getFirst()==null) return null;
+        return getEpochDelta() + getFirst();
+    }
+
+    public boolean isFirstReached() {
+        if (getFirst() == null) {
+            return true;
+        }
+        return getFirstInMillisFromNow()<=0;
+    }
+
+    public long getEpochDelta() {
+        if (getEpoch() == null) {
+            return 0;
+        }
+        return getEpoch() - System.currentTimeMillis();
+    }
+
 }
