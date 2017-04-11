@@ -60,13 +60,9 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
 
     private final TimerDevice device;
 
-    public TimerService(URI mqttURI, String instance) throws MqttException {
-        super(mqttURI, instance, new TimerServiceContract(instance));
-        publishDescription(getContract().INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        publishDescription(getContract().STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        publishDescription(getContract().EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: [0.." + Long.MAX_VALUE + "]\n");
-        publishDescription(getContract().STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
-
+    public TimerService(URI mqttURI, String instanceName) throws MqttException {
+        super(mqttURI, instanceName, new TimerServiceContract(instanceName));
+       
         configurations = new TreeSet<>();
         device = new TimerDevice(this);
         subscribe(getContract().INTENT_CONFIGURATION + "/#", (topic, payload) -> {

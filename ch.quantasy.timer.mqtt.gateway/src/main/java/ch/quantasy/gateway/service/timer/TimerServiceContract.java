@@ -42,6 +42,7 @@
 package ch.quantasy.gateway.service.timer;
 
 import ch.quantasy.mqtt.gateway.client.ClientContract;
+import java.util.Map;
 
 /**
  *
@@ -49,7 +50,6 @@ import ch.quantasy.mqtt.gateway.client.ClientContract;
  */
 public class TimerServiceContract extends ClientContract {
 
-    
     private final String CONFIGURATION;
     public final String INTENT_CONFIGURATION;
     public final String STATUS_CONFIGURATION;
@@ -57,15 +57,24 @@ public class TimerServiceContract extends ClientContract {
     public final String EVENT_TICK;
     private final String UNIX_EPOCH;
     public final String STATUS_UNIX_EPOCH;
+
     public TimerServiceContract(String instanceID) {
         super("Timer", "Tick", instanceID);
-        CONFIGURATION="configuration";
-        INTENT_CONFIGURATION=INTENT+"/"+CONFIGURATION;
-        STATUS_CONFIGURATION=STATUS+"/"+CONFIGURATION;
-        TICK="tick";
-        EVENT_TICK=EVENT+"/"+TICK;
-        UNIX_EPOCH="unixEpoch";
-        STATUS_UNIX_EPOCH=STATUS+"/"+UNIX_EPOCH;
+        CONFIGURATION = "configuration";
+        INTENT_CONFIGURATION = INTENT + "/" + CONFIGURATION;
+        STATUS_CONFIGURATION = STATUS + "/" + CONFIGURATION;
+        TICK = "tick";
+        EVENT_TICK = EVENT + "/" + TICK;
+        UNIX_EPOCH = "unixEpoch";
+        STATUS_UNIX_EPOCH = STATUS + "/" + UNIX_EPOCH;
+    }
+
+    @Override
+    protected void describe(Map<String, String> descriptions) {
+        descriptions.put(INTENT_CONFIGURATION, "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
+        descriptions.put(STATUS_CONFIGURATION + "/<id>", "id: <String>\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
+        descriptions.put(EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: [0.." + Long.MAX_VALUE + "]\n");
+        descriptions.put(STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
     }
 
 }
