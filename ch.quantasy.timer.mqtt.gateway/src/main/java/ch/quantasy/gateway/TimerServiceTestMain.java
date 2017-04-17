@@ -42,7 +42,7 @@
 package ch.quantasy.gateway;
 
 import ch.quantasy.gateway.service.timer.TimerServiceContract;
-import ch.quantasy.mqtt.gateway.client.ClientContract;
+import ch.quantasy.mqtt.gateway.client.AyamlClientContract;
 import ch.quantasy.mqtt.gateway.client.GatewayClient;
 import ch.quantasy.timer.DeviceTickerConfiguration;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -67,7 +67,7 @@ public class TimerServiceTestMain {
         System.out.printf("\n%s will be used as broker address.\n", mqttURI);
 
         TimerServiceContract timerContract=new TimerServiceContract("prisma");
-        GatewayClient gc = new GatewayClient(mqttURI,"tester"+((int)(10000*Math.random())),new ClientContract("TimerTester", "prisma","1"){
+        GatewayClient gc = new GatewayClient(mqttURI,"tester"+((int)(10000*Math.random())),new AyamlClientContract("TimerTester", "prisma","1"){
             @Override
             protected void describe(Map<String, String> descriptions) {
             }

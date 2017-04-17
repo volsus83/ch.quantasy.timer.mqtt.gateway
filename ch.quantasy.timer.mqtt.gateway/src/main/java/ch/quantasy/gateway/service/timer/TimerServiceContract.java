@@ -41,14 +41,14 @@
  */
 package ch.quantasy.gateway.service.timer;
 
-import ch.quantasy.mqtt.gateway.client.ClientContract;
+import ch.quantasy.mqtt.gateway.client.AyamlClientContract;
 import java.util.Map;
 
 /**
  *
  * @author reto
  */
-public class TimerServiceContract extends ClientContract {
+public class TimerServiceContract extends AyamlClientContract {
 
     private final String CONFIGURATION;
     public final String INTENT_CONFIGURATION;
