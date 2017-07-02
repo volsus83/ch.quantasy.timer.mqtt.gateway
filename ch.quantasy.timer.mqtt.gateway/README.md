@@ -13,7 +13,7 @@ Please note, that this project depends on [https://github.com/knr1/ch.quantasy.m
 ## Installation
 In order to install TimerMqWay 
 * **Developers way** clone and build the project. Please note that it depends on [https://github.com/knr1/ch.quantasy.mqtt.gateway]
-* **Users way** download the latest [TiMqWay.jar]
+* **Users way** download the latest [TimerMqWay.jar]
  
 ## Usage
 To run TimerMqWay,you need Java (7 or higher) and a running MQTT-Server. You can start TimerMqWay with the MQTT-Server-Parameter.
@@ -35,14 +35,14 @@ Then, all timer related things run under the topic: Timer/Tick/[instance]
 
 The status immediately shows the current UNIX epoch time, which is updated once per second.
 ```sh
-Topic: Time/Tick/[instance]/S/unixEpoch
+Topic: Time/Tick/U/[instance]/S/unixEpoch
 Message: ---
          milliseconds: [0..9223372036854775807]
 ```
 
 There is only one intent in order to setup or alter a timer: 
 ```sh
-Topic: Timer/Tick/[instance]/I/configuration
+Topic: Timer/Tick/U/[instance]/I/configuration
 Message: --- 
          id: <String>
          epoch: [null|0..9223372036854775807]
@@ -65,19 +65,19 @@ We assume that the Timer-Service runs on a server called matrix.
  
 **Setting a timer that starts immediately for a one shot.**
 ```
-Topic: Timer/Tick/matrix/I/configuration/quickshot
+Topic: Timer/Tick/U/matrix/I/configuration/quickshot
 Message: id: thisIsAOneTimer
 ```
 
 The answer will be the following event:
 ```
-Topic: Timer/Tick/matrix/E/thisIsAOneTimer
+Topic: Timer/Tick/U/matrix/E/thisIsAOneTimer
 Message: --- - timestamp: 1490217018902 value: 0 
 ```
 
 **Setting a timer that repeats every 500ms ASAP.**
 ```
-Topic: Timer/Tick/matrix/I/configuration/quickshot
+Topic: Timer/Tick/U/matrix/I/configuration/quickshot
 Message: id: fiveHundertMillis
          interval: 500
 ```
@@ -85,7 +85,7 @@ Message: id: fiveHundertMillis
 
 The answer will be the following event:
 ```
-Topic: Timer/Tick/matrix/E/fiveHundertMillis
+Topic: Timer/Tick/U/matrix/E/fiveHundertMillis
 Message: --- - timestamp: 1490217018902 value: 501 
 ```
 
@@ -93,7 +93,7 @@ whereas the value represents the time in ms passed, since the set epoch.
 
 **Setting a timer that repeats once a second, starting 10 seconds from ASAP.**
 ```
-Topic: Timer/Tick/matrix/I/configuration/quickshot
+Topic: Timer/Tick/U/matrix/I/configuration/quickshot
 Message: id: onceASecond
          first: 10000
          interval: 1000
@@ -102,7 +102,7 @@ Message: id: onceASecond
 
 The answer will be the following event:
 ```
-Topic: Timer/Tick/matrix/E/onceASecond
+Topic: Timer/Tick/U/matrix/E/onceASecond
 Message: --- - timestamp: 1490217018902 value: 10001 
 ```
 
@@ -113,7 +113,7 @@ whereas the value represents the time in ms passed, since the set epoch.
 Say the actual time would be: 1490217018902
 And we want to set the epoch of the timer 20 seconds later: 1490217038902
 ```
-Topic: Timer/Tick/matrix/I/configuration/quickshot
+Topic: Timer/Tick/U/matrix/I/configuration/quickshot
 Message: id: onceASecond
          epoch: 1490217038902
          first: 10000
@@ -123,7 +123,7 @@ Message: id: onceASecond
 
 The answer will be the following event:
 ```
-Topic: Timer/Tick/matrix/E/onceASecond
+Topic: Timer/Tick/U/matrix/E/onceASecond
 Message: --- - timestamp: 1490217048902 value: 10000 
 ```
 
@@ -135,7 +135,7 @@ Say the actual time would be: 1490217018902
 And we want to set the epoch of the timer 20 seconds later: 1490217038902
 
 ```
-Topic: Timer/Tick/matrix/I/configuration/quickshot
+Topic: Timer/Tick/U/matrix/I/configuration/quickshot
 Message: id: onceASecond
          epoch: 1490217038902
          first: 10000
@@ -149,11 +149,43 @@ Topic: Timer/Tick/matrix/E/onceASecond
 Message: --- - timestamp: 1490217048902 value: 10000 
 ```
 
-whereas the value represents the time in ms passed, since the set epoch.
+whereas the value represents the time in milliseconds passed, since the set epoch.
 Caution: This means, the timer is 'only' running for 10 seconds.
 Caution: First and Last is meant to be the amount of milliseconds since the set epoch!
+
+## API
+
+### Tick
+```
+Timer/Tick/U/<id>/E/tick/<id>
+   timestamp: [0..9223372036854775807]
+    value: [0..9223372036854775807]
+   
+```
+```
+Timer/Tick/U/<id>/I/configuration
+   id: <String>
+    first: [null|0..9223372036854775807]
+    interval: [null|1..9223372036854775807]
+    last: [null|0..9223372036854775807]
+   
+```
+```
+Timer/Tick/U/<id>/S/configuration/<id>
+   id: <String>
+    first: [null|0..9223372036854775807]
+    interval: [null|1..9223372036854775807]
+    last: [null|0..9223372036854775807]
+   
+```
+```
+Timer/Tick/U/<id>/S/unixEpoch
+   milliseconds: [0..9223372036854775807]
+   
+```
 
 
 
 [https://github.com/knr1/ch.quantasy.mqtt.gateway]:<https://github.com/knr1/ch.quantasy.mqtt.gateway>
-[TiMqWay.jar]: <https://prof.hti.bfh.ch/knr1/TiMqWay.jar>
+[TimerMqWay.jar]: <https://github.com/knr1/ch.quantasy.tinkerforge.mqtt.gateway/blob/master/dist/TimerMqWay.jar>
+
