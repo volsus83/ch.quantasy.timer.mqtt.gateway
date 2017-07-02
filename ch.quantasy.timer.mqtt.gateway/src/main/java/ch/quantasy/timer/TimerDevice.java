@@ -45,6 +45,13 @@ import java.util.SortedMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -54,16 +61,25 @@ public class TimerDevice {
 
     private final SortedMap<String, Ticker> tickerMap;
     private final TimerDeviceCallback callback;
-    private final Timer timer;
+    private final ScheduledExecutorService timerService;
 
     public TimerDevice(TimerDeviceCallback callback) {
         this.callback = callback;
         tickerMap = new TreeMap<>();
-        this.timer = new Timer();
-
+        this.timerService = Executors.newScheduledThreadPool(4, new ThreadFactory() {
+            public Thread newThread(Runnable r) {
+                Thread t = Executors.defaultThreadFactory().newThread(r);
+                t.setDaemon(true);
+                return t;
+            }
+        });
     }
 
     public void setTickerConfiguration(DeviceTickerConfiguration configuration) {
+        if (configuration == null) {
+            return;
+        }
+        Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, null, configuration);
         Ticker ticker = null;
         synchronized (this) {
             ticker = tickerMap.get(configuration.getId());
@@ -95,7 +111,10 @@ public class TimerDevice {
             this.id = id;
         }
 
-        public void updateConfig(DeviceTickerConfiguration configuration) {
+        public synchronized void updateConfig(DeviceTickerConfiguration configuration) {
+            if (configuration == null) {
+                return;
+            }
             if (!this.id.equals(configuration.getId())) {
                 return;
             }
@@ -126,52 +145,61 @@ public class TimerDevice {
             task = new Task(task);
         }
 
-        class Task extends TimerTask {
+        class Task implements Runnable {
 
+            private Future taskFuture;
             private boolean isFirstReached = false;
             private long latestTick = 0;
 
             public Task(Task oldTask) {
-                if (oldTask != null) {
-                    oldTask.cancel();
+                if (oldTask != null && taskFuture != null) {
+                    taskFuture.cancel(false);
                     this.latestTick = oldTask.latestTick;
                 }
-                System.out.println("Config: " + configuration);
                 callback.tickerConfigurationUpdated(configuration);
                 Integer interval = configuration.getInterval();
                 Long start = configuration.getFirstInMillisFromNow();
+
                 if (start == null || start <= 0) {
                     if (interval != null && interval > 0) {
                         start = Math.max(0, interval - (System.currentTimeMillis() - latestTick));
                         isFirstReached = configuration.isFirstReached();
-                        timer.scheduleAtFixedRate(this, start, interval);
+                        //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ": let us see: start:" + start + " interval: " + interval+" configuration: "+configuration);
+                        taskFuture = timerService.scheduleAtFixedRate(this, start, interval, TimeUnit.MILLISECONDS);
                     } else {
                         isFirstReached = configuration.isFirstReached();
-                        timer.schedule(this, 0);
+                        //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ": let us see: start:" + start + " oneTimer, configuration: "+configuration);
+                        taskFuture = timerService.schedule(this, 0, TimeUnit.MILLISECONDS);
                     }
                 } else {
-
                     if (interval != null && interval > 0) {
                         isFirstReached = configuration.isFirstReached();
-                        timer.scheduleAtFixedRate(this, start, interval);
+                        //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ": let us see: start:" + start + " interval: " + interval);
+                        taskFuture = timerService.scheduleAtFixedRate(this, start, interval, TimeUnit.MILLISECONDS);
                     } else {
+                        //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ": a one timer: " + configuration);
                         isFirstReached = configuration.isFirstReached();
-                        timer.schedule(this, start);
+                        taskFuture = timerService.schedule(this, start, TimeUnit.MILLISECONDS);
                     }
                 }
             }
 
             @Override
             public void run() {
+                if (configuration == null) {
+                    return;
+                }
+                //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ":" + configuration);
+
                 if (isFirstReached == false) {
                     isFirstReached = true;
                     callback.tickerConfigurationUpdated(configuration);
                 }
                 latestTick = System.currentTimeMillis();
                 callback.onTick(configuration.getId(), 0 - configuration.getEpochDelta());
-                // System.out.println(System.currentTimeMillis()+":"+configuration);
+                //Logger.getLogger(TimerDevice.class.getName()).log(Level.INFO, System.currentTimeMillis() + ": " + latestTick);
                 if (configuration.isFinished()) {
-                    this.cancel();
+                    taskFuture.cancel(false);
                     callback.tickerConfigurationUpdated(configuration);
                     removeTicker(Ticker.this);
                 }

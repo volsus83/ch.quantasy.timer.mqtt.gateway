@@ -208,4 +208,5 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
         return getEpoch() - System.currentTimeMillis();
     }
 
+    
 }

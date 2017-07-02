@@ -61,8 +61,8 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
     private final TimerDevice device;
 
     public TimerService(URI mqttURI, String instanceName) throws MqttException {
-        super(mqttURI, instanceName, new TimerServiceContract(instanceName));
-       
+        super(mqttURI, "TimerService:" + instanceName, new TimerServiceContract(instanceName));
+
         configurations = new TreeSet<>();
         device = new TimerDevice(this);
         subscribe(getContract().INTENT_CONFIGURATION + "/#", (topic, payload) -> {
@@ -81,6 +81,9 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
 
     @Override
     public void tickerConfigurationUpdated(DeviceTickerConfiguration configuration) {
+        if (configuration == null) {
+            return;
+        }
         if (configuration.getId().equals(super.getParameters().getClientID())) {
             return;
         }
@@ -99,6 +102,9 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
 
     @Override
     public void tickerConfigurationRemoved(DeviceTickerConfiguration configuration) {
+        if (configuration == null) {
+            return;
+        }
         configurations.remove(configuration);
         publishStatus(getContract().STATUS_CONFIGURATION + "/" + configuration.getId(), null);
     }
