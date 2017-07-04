@@ -39,45 +39,30 @@
  *
  *
  */
-package ch.quantasy.gateway.service.timer;
-
-import ch.quantasy.mqtt.gateway.client.AyamlClientContract;
-import java.util.Map;
+package ch.quantasy.timer;
 
 /**
  *
  * @author reto
  */
-public class TimerServiceContract extends AyamlClientContract {
+public class DeviceTickerCancel {
+    private String id;
+    
+    private DeviceTickerCancel() {
+    }
+    
+    public DeviceTickerCancel(String id){
+        this.id=id;
+    }
 
-    private final String CONFIGURATION;
-    public final String INTENT_CONFIGURATION;
-    public final String STATUS_CONFIGURATION;
-    private final String TICK;
-    public final String EVENT_TICK;
-    private final String UNIX_EPOCH;
-    public final String STATUS_UNIX_EPOCH;
-    public final String INTENT_CANCEL;
-
-    public TimerServiceContract(String instanceID) {
-        super("Timer", "Tick", instanceID);
-        CONFIGURATION = "configuration";
-        INTENT_CONFIGURATION = INTENT + "/" + CONFIGURATION;
-        STATUS_CONFIGURATION = STATUS + "/" + CONFIGURATION;
-        TICK = "tick";
-        EVENT_TICK = EVENT + "/" + TICK;
-        UNIX_EPOCH = "unixEpoch";
-        STATUS_UNIX_EPOCH = STATUS + "/" + UNIX_EPOCH;
-        INTENT_CANCEL=INTENT +"/cancel";
+    public String getId() {
+        return id;
     }
 
     @Override
-    protected void describe(Map<String, String> descriptions) {
-        descriptions.put(INTENT_CONFIGURATION, "id: <String>\n epoch: [null|0.." + Long.MAX_VALUE+"]\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        descriptions.put(INTENT_CANCEL, "id: <String>");
-        descriptions.put(STATUS_CONFIGURATION + "/<id>", "id: <String>\n epoch: [null|0.." + Long.MAX_VALUE+"]\n first: [null|0.." + Long.MAX_VALUE + "]\n interval: [null|1.." + Long.MAX_VALUE + "]\n last: [null|0.." + Long.MAX_VALUE + "]\n");
-        descriptions.put(EVENT_TICK + "/<id>", "timestamp: [0.." + Long.MAX_VALUE + "]\n value: [0.." + Long.MAX_VALUE + "]\n");
-        descriptions.put(STATUS_UNIX_EPOCH, "milliseconds: [0.." + Long.MAX_VALUE + "]\n");
+    public String toString() {
+        return "DeviceTickerCancel{" + "id=" + id + '}';
     }
-
+    
+    
 }

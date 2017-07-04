@@ -181,32 +181,37 @@ public class DeviceTickerConfiguration implements Comparable<DeviceTickerConfigu
             }
             return false;
         }
-        return getLastInMillisFromNow()<=0;
+        return getLastInMillisFromNow() <= 0;
     }
-    
-    public Long getLastInMillisFromNow(){
-        if(getLast()==null) return null;
+
+    public Long getLastInMillisFromNow() {
+        if (getLast() == null) {
+            return null;
+        }
         return getEpochDelta() + getLast();
     }
 
     public Long getFirstInMillisFromNow() {
-        if(getFirst()==null) return null;
-        return getEpochDelta() + getFirst();
+        if (getFirst() == null) {
+            return null;
+        }
+        Long a=System.currentTimeMillis();
+        Long x=getEpochDelta() + getFirst();
+        return x;
     }
 
     public boolean isFirstReached() {
         if (getFirst() == null) {
             return true;
         }
-        return getFirstInMillisFromNow()<=0;
+        return getFirstInMillisFromNow() <= 0;
     }
 
-    public long getEpochDelta() {
+    public Long getEpochDelta() {
         if (getEpoch() == null) {
-            return 0;
+            return 0L;
         }
         return getEpoch() - System.currentTimeMillis();
     }
 
-    
 }

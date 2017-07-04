@@ -42,6 +42,7 @@
 package ch.quantasy.gateway.service.timer;
 
 import ch.quantasy.mqtt.gateway.client.GatewayClient;
+import ch.quantasy.timer.DeviceTickerCancel;
 import ch.quantasy.timer.DeviceTickerConfiguration;
 import ch.quantasy.timer.TimerDevice;
 import ch.quantasy.timer.TimerDeviceCallback;
@@ -65,6 +66,14 @@ public class TimerService extends GatewayClient<TimerServiceContract> implements
 
         configurations = new TreeSet<>();
         device = new TimerDevice(this);
+        subscribe(getContract().INTENT_CANCEL+"/#", (topic, payload) -> {
+            try {
+                DeviceTickerCancel cancel = super.getMapper().readValue(payload, DeviceTickerCancel.class);
+                device.cancel(cancel);
+            } catch (Exception ex) {
+                Logger.getLogger(TimerService.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
         subscribe(getContract().INTENT_CONFIGURATION + "/#", (topic, payload) -> {
             try {
                 DeviceTickerConfiguration configuration = super.getMapper().readValue(payload, DeviceTickerConfiguration.class);
