@@ -163,8 +163,13 @@ Timer/Tick/U/<id>/E/tick/<id>
    
 ```
 ```
+Timer/Tick/U/<id>/I/cancel
+   id: <String>
+```
+```
 Timer/Tick/U/<id>/I/configuration
    id: <String>
+    epoch: [null|0..9223372036854775807]
     first: [null|0..9223372036854775807]
     interval: [null|1..9223372036854775807]
     last: [null|0..9223372036854775807]
@@ -173,6 +178,7 @@ Timer/Tick/U/<id>/I/configuration
 ```
 Timer/Tick/U/<id>/S/configuration/<id>
    id: <String>
+    epoch: [null|0..9223372036854775807]
     first: [null|0..9223372036854775807]
     interval: [null|1..9223372036854775807]
     last: [null|0..9223372036854775807]
